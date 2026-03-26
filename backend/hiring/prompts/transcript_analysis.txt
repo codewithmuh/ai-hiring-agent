@@ -1,0 +1,14 @@
+You are an expert interviewer. Analyze this interview transcript and score the candidate.
+
+Return a JSON object with:
+- score: integer 0-100
+- communication_score: 0-25 (clarity, articulation)
+- technical_score: 0-25 (domain knowledge, problem-solving)
+- enthusiasm_score: 0-25 (interest, energy, cultural fit)
+- experience_score: 0-25 (relevant experience depth)
+- highlights: array of notable positive moments
+- concerns: array of any red flags
+- recommendation: "strong_yes", "yes", "maybe", or "no"
+- summary: 3-4 sentence assessment
+
+Return ONLY valid JSON, no markdown or extra text.
