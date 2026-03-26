@@ -27,4 +27,8 @@ urlpatterns = [
 
     # Public application
     path('api/apply/', views.apply, name='apply'),
+
+    # Vapi custom LLM endpoint (OpenAI-compatible)
+    path('api/vapi/chat/completions/', views.vapi_chat_completions, name='vapi_chat_completions'),
+    path('api/vapi/chat/completions', views.vapi_chat_completions, name='vapi_chat_completions_no_slash'),
 ]

@@ -1,5 +1,10 @@
+import json
 import logging
+import time
+import uuid as uuid_lib
 
+from django.http import JsonResponse, StreamingHttpResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Avg, Count, Q
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -16,6 +21,7 @@ from .serializers import (
     JobDetailSerializer,
 )
 from .services import claude_service, vapi_service
+from .services.interviewer import handle_conversation_turn, openai_messages_to_claude
 
 logger = logging.getLogger(__name__)
 
@@ -345,3 +351,109 @@ def apply(request):
         "interview_scheduled": interview_scheduled,
         "scheduled_time": scheduled_time,
     }, status=status.HTTP_201_CREATED)
+
+
+# ──────────────────────────────────────────
+# POST /api/vapi/chat/completions/
+# Custom LLM endpoint — Vapi sends OpenAI-format
+# messages here, we call Claude directly.
+# ──────────────────────────────────────────
+@csrf_exempt
+def vapi_chat_completions(request):
+    """OpenAI-compatible chat completions endpoint for Vapi custom LLM."""
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    messages = data.get("messages", [])
+    if not messages:
+        return JsonResponse({"error": "No messages provided"}, status=400)
+
+    # Extract candidate info from call metadata
+    call_data = data.get("call", {})
+    metadata = call_data.get("metadata", {}) or data.get("metadata", {})
+    candidate_name = metadata.get("candidate_name", "Candidate")
+    key_skill = metadata.get("key_skill", "your primary technical skill")
+
+    logger.info("Custom LLM: %d messages, candidate=%s", len(messages), candidate_name)
+
+    # Convert Vapi (OpenAI format) -> Claude format
+    claude_messages = openai_messages_to_claude(messages)
+    if not claude_messages:
+        return JsonResponse({"error": "No valid messages"}, status=400)
+
+    # Ensure starts with user message
+    if claude_messages[0]["role"] != "user":
+        claude_messages.insert(0, {"role": "user", "content": "Hello"})
+
+    # Merge consecutive same-role messages (Claude requires alternating)
+    fixed = []
+    for msg in claude_messages:
+        if fixed and fixed[-1]["role"] == msg["role"]:
+            fixed[-1]["content"] += "\n" + msg["content"]
+        else:
+            fixed.append(msg)
+
+    try:
+        result = handle_conversation_turn(fixed, candidate_name=candidate_name, key_skill=key_skill)
+        response_text = result["text"]
+        end_call = result["end_call"]
+    except Exception as e:
+        logger.error("Custom LLM error: %s", e)
+        response_text = "I'm sorry, I'm having a technical issue. Let me wrap up — we'll review your application and get back to you."
+        end_call = True
+
+    # Check if streaming
+    if data.get("stream", False):
+        return _stream_response(response_text, end_call)
+
+    # Return OpenAI chat completions format
+    resp = JsonResponse({
+        "id": f"chatcmpl-{uuid_lib.uuid4().hex[:12]}",
+        "object": "chat.completion",
+        "created": int(time.time()),
+        "model": "claude-sonnet-4-20250514",
+        "choices": [{
+            "index": 0,
+            "message": {"role": "assistant", "content": response_text},
+            "finish_reason": "stop",
+        }],
+        "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+    })
+    if end_call:
+        resp["X-Vapi-End-Call"] = "true"
+    return resp
+
+
+def _stream_response(text: str, end_call: bool = False):
+    """Return a streaming response in OpenAI SSE format."""
+    completion_id = f"chatcmpl-{uuid_lib.uuid4().hex[:12]}"
+
+    def event_stream():
+        chunk = {
+            "id": completion_id,
+            "object": "chat.completion.chunk",
+            "created": int(time.time()),
+            "model": "claude-sonnet-4-20250514",
+            "choices": [{"index": 0, "delta": {"role": "assistant", "content": text}, "finish_reason": None}],
+        }
+        yield f"data: {json.dumps(chunk)}\n\n"
+
+        stop_chunk = {
+            "id": completion_id,
+            "object": "chat.completion.chunk",
+            "created": int(time.time()),
+            "model": "claude-sonnet-4-20250514",
+            "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}],
+        }
+        yield f"data: {json.dumps(stop_chunk)}\n\n"
+        yield "data: [DONE]\n\n"
+
+    response = StreamingHttpResponse(event_stream(), content_type="text/event-stream")
+    if end_call:
+        response["X-Vapi-End-Call"] = "true"
+    return response

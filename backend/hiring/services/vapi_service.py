@@ -3,8 +3,6 @@ import logging
 
 import requests
 
-from .claude_service import get_interview_system_prompt
-
 logger = logging.getLogger(__name__)
 
 VAPI_API_URL = "https://api.vapi.ai"
@@ -23,14 +21,15 @@ def _get_headers() -> dict:
 def create_call(candidate_name: str, phone_number: str, key_skill: str = "your primary technical skill") -> dict:
     """
     Trigger a Vapi outbound voice call to the candidate.
-    Returns the call object from Vapi including call_id.
+    Uses custom LLM endpoint — Vapi sends messages to our Django backend,
+    we call Claude directly with our own API key.
     """
     phone_number_id = os.getenv("VAPI_PHONE_NUMBER_ID")
     if not phone_number_id:
         raise ValueError("VAPI_PHONE_NUMBER_ID environment variable is not set")
 
-    voice_id = os.getenv("ELEVENLABS_VOICE_ID", "")
-    system_prompt = get_interview_system_prompt(candidate_name, key_skill)
+    voice_id = os.getenv("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")
+    server_url = os.getenv("BACKEND_PUBLIC_URL", "https://your-domain.ngrok.io")
 
     payload = {
         "phoneNumberId": phone_number_id,
@@ -39,25 +38,25 @@ def create_call(candidate_name: str, phone_number: str, key_skill: str = "your p
         },
         "assistant": {
             "model": {
-                "provider": "anthropic",
+                "provider": "custom-llm",
+                "url": f"{server_url}/api/vapi/chat/completions/",
                 "model": "claude-sonnet-4-20250514",
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                ],
             },
             "voice": {
                 "provider": "11labs",
                 "voiceId": voice_id,
-            } if voice_id else {
-                "provider": "11labs",
-                "voiceId": "21m00Tcm4TlvDq8ikWAM",  # default Rachel voice
             },
             "firstMessage": f"Hi {candidate_name}, this is the AI screening assistant. Thanks for taking the time to speak with us today. How are you doing?",
             "endCallMessage": "Thank you for your time. We'll review everything and get back to you soon. Have a great day!",
+            "metadata": {
+                "candidate_name": candidate_name,
+                "key_skill": key_skill,
+            },
+            "serverUrl": f"{server_url}/api/webhooks/vapi/",
         },
     }
 
-    logger.info("Creating Vapi call to %s for candidate %s", phone_number, candidate_name)
+    logger.info("Creating Vapi call to %s for candidate %s (custom LLM)", phone_number, candidate_name)
 
     response = requests.post(
         f"{VAPI_API_URL}/call/phone",
