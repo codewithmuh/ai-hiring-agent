@@ -42,7 +42,7 @@ export default function CandidateCard({ candidate }: CandidateCardProps) {
   return (
     <Link
       href={`/candidates/${candidate.id}`}
-      className="group block rounded-2xl border bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-violet-200"
+      className="group block rounded-2xl border bg-white p-6 shadow-sm transition-all duration-200 hover:shadow-lg hover:shadow-violet-100/50 hover:border-violet-200 hover:-translate-y-0.5"
     >
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">

@@ -360,14 +360,14 @@ export default function CandidateDetailPage() {
 
         <div className="p-6">
           {candidate.resume_analysis && "summary" in candidate.resume_analysis && (
-            <p className="text-sm text-muted-foreground leading-relaxed mb-6 bg-gray-50 rounded-xl p-4 border border-gray-100">
+            <p className="text-sm text-muted-foreground leading-relaxed mb-6 bg-gradient-to-r from-violet-50/60 to-indigo-50/40 rounded-xl p-4 border border-violet-100">
               {String(candidate.resume_analysis.summary)}
             </p>
           )}
 
           <div className="grid gap-6 sm:grid-cols-2">
             {candidate.resume_strengths.length > 0 && (
-              <div className="rounded-xl border border-emerald-100 bg-emerald-50/30 p-5">
+              <div className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-emerald-50/50 p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <Award className="h-4 w-4 text-emerald-600" />
                   <h3 className="text-sm font-semibold text-emerald-700">Strengths</h3>
@@ -389,7 +389,7 @@ export default function CandidateDetailPage() {
               </div>
             )}
             {candidate.resume_red_flags.length > 0 && (
-              <div className="rounded-xl border border-red-100 bg-red-50/30 p-5">
+              <div className="rounded-xl border border-red-200 bg-gradient-to-br from-red-50 to-red-50/50 p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <XCircle className="h-4 w-4 text-red-600" />
                   <h3 className="text-sm font-semibold text-red-700">Red Flags</h3>
@@ -411,8 +411,8 @@ export default function CandidateDetailPage() {
               </div>
             )}
             {candidate.resume_red_flags.length === 0 && candidate.resume_strengths.length > 0 && (
-              <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50/50 p-5 flex flex-col items-center justify-center text-center">
-                <CheckCircle2 className="h-8 w-8 text-emerald-300 mb-2" />
+              <div className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-emerald-25/30 p-5 flex flex-col items-center justify-center text-center">
+                <CheckCircle2 className="h-8 w-8 text-emerald-400 mb-2" />
                 <p className="text-sm font-medium text-muted-foreground">No Red Flags</p>
                 <p className="text-xs text-muted-foreground mt-0.5">Clean resume with no concerns identified</p>
               </div>

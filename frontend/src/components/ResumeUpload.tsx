@@ -48,9 +48,9 @@ export default function ResumeUpload({ onUploadComplete }: ResumeUploadProps) {
   }
 
   return (
-    <div className="rounded-2xl border bg-white p-6 shadow-sm">
+    <div className="rounded-2xl border bg-gradient-to-br from-white to-violet-50/30 p-6 shadow-sm">
       <div className="mb-5">
-        <h2 className="text-lg font-semibold">Upload Resume</h2>
+        <h2 className="text-lg font-bold">Upload Resume</h2>
         <p className="text-sm text-muted-foreground mt-0.5">Screen candidates with AI</p>
       </div>
       <form onSubmit={handleSubmit} className="space-y-4">

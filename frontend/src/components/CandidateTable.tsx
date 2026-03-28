@@ -93,7 +93,7 @@ export default function CandidateTable({ candidates, loading }: CandidateTablePr
             {candidates.map((candidate) => {
               const status = statusConfig[candidate.final_status] || statusConfig.new;
               return (
-                <tr key={candidate.id} className="group transition-colors hover:bg-violet-50/30">
+                <tr key={candidate.id} className="group transition-all duration-200 hover:bg-violet-50/40 hover:shadow-sm">
                   <td className="px-6 py-4">
                     <Link href={`/candidates/${candidate.id}`} className="flex items-center gap-3">
                       <div className={cn("flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br text-xs font-semibold text-white shadow-sm", getAvatarColor(candidate.name))}>
@@ -127,7 +127,7 @@ export default function CandidateTable({ candidates, loading }: CandidateTablePr
                   </td>
                   <td className="pr-4">
                     <Link href={`/candidates/${candidate.id}`}>
-                      <ChevronRight className="h-4 w-4 text-gray-300 transition-colors group-hover:text-violet-500" />
+                      <ChevronRight className="h-4 w-4 text-gray-300 transition-all duration-200 group-hover:text-violet-500 group-hover:translate-x-0.5" />
                     </Link>
                   </td>
                 </tr>
