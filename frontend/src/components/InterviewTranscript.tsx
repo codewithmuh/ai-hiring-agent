@@ -15,6 +15,7 @@ interface InterviewTranscriptProps {
     recommendation?: string;
     summary?: string;
   } | null;
+  interviewStatus?: string;
 }
 
 const scoreConfig: Record<string, { bar: string; bg: string; icon: string; label: string }> = {
@@ -76,7 +77,50 @@ function parseTranscript(raw: string) {
   });
 }
 
-export default function InterviewTranscript({ transcript, analysis }: InterviewTranscriptProps) {
+export default function InterviewTranscript({ transcript, analysis, interviewStatus }: InterviewTranscriptProps) {
+  // Show live call indicator
+  if (interviewStatus === "in_progress") {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="rounded-2xl border-2 border-violet-200 bg-gradient-to-br from-violet-50 to-white p-12 shadow-sm"
+      >
+        <div className="flex flex-col items-center text-center">
+          <div className="relative mb-5">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-100">
+              <Mic className="h-8 w-8 text-violet-600" />
+            </div>
+            <motion.div
+              className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-emerald-500 border-2 border-white"
+              animate={{ scale: [1, 1.3, 1], opacity: [1, 0.7, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            />
+          </div>
+          <h2 className="text-lg font-semibold text-violet-900">Interview In Progress</h2>
+          <p className="text-muted-foreground text-sm mt-1 max-w-sm">
+            The AI interviewer is speaking with the candidate right now. Results will appear here automatically when the call ends.
+          </p>
+          <motion.div
+            className="mt-6 flex items-center gap-1.5"
+            animate={{ opacity: [0.4, 1, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={i}
+                className="h-2 w-2 rounded-full bg-violet-400"
+                animate={{ scale: [1, 1.5, 1] }}
+                transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+              />
+            ))}
+          </motion.div>
+        </div>
+      </motion.div>
+    );
+  }
+
   if (!transcript && !analysis) {
     return (
       <motion.div

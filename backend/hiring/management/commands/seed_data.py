@@ -146,7 +146,7 @@ DEMO_CANDIDATES = [
     {
         "name": "Sarah Chen",
         "email": "sarah.chen@email.com",
-        "phone": "+1 (415) 555-0142",
+        "phone": "+923107578999",
         "job_index": 0,
         "resume_score": 92,
         "resume_strengths": [
@@ -173,7 +173,7 @@ DEMO_CANDIDATES = [
     {
         "name": "Marcus Johnson",
         "email": "marcus.j@outlook.com",
-        "phone": "+1 (212) 555-0198",
+        "phone": "+923107578999",
         "job_index": 0,
         "resume_score": 78,
         "resume_strengths": ["5 years backend with Django and FastAPI", "Strong database optimization", "AWS certified solutions architect"],
@@ -195,7 +195,7 @@ DEMO_CANDIDATES = [
     {
         "name": "Priya Patel",
         "email": "priya.patel@gmail.com",
-        "phone": "+1 (650) 555-0167",
+        "phone": "+923107578999",
         "job_index": 0,
         "resume_score": 85,
         "resume_strengths": ["7 years TypeScript and Node.js", "Built SaaS products 0 to 100K users", "Strong DevOps and CI/CD experience", "50K monthly reader tech blog"],
@@ -209,7 +209,7 @@ DEMO_CANDIDATES = [
     {
         "name": "James O'Brien",
         "email": "james.obrien@proton.me",
-        "phone": "+1 (312) 555-0134",
+        "phone": "+923107578999",
         "job_index": 0,
         "resume_score": 45,
         "resume_strengths": ["2 years web development", "Multiple bootcamp projects"],
@@ -223,7 +223,7 @@ DEMO_CANDIDATES = [
     {
         "name": "Emily Zhang",
         "email": "emily.z@company.io",
-        "phone": "+1 (628) 555-0189",
+        "phone": "+923107578999",
         "job_index": 1,
         "resume_score": 88,
         "resume_strengths": ["PhD in Machine Learning from Stanford", "3 years at Google Brain", "Published 12 papers in top ML conferences", "Expert in transformer architectures"],
@@ -237,7 +237,7 @@ DEMO_CANDIDATES = [
     {
         "name": "David Kim",
         "email": "david.kim@tech.dev",
-        "phone": "+1 (408) 555-0156",
+        "phone": "+923107578999",
         "job_index": 1,
         "resume_score": 34,
         "resume_strengths": ["Enthusiastic about AI"],
@@ -251,7 +251,7 @@ DEMO_CANDIDATES = [
     {
         "name": "Ana Rodriguez",
         "email": "ana.r@devmail.com",
-        "phone": "+1 (305) 555-0172",
+        "phone": "+923107578999",
         "job_index": 2,
         "resume_score": 71,
         "resume_strengths": ["4 years product design at startups", "Strong Figma prototyping skills", "Healthcare UX expertise"],
@@ -273,7 +273,7 @@ DEMO_CANDIDATES = [
     {
         "name": "Alex Thompson",
         "email": "alex.t@fastmail.com",
-        "phone": "+1 (206) 555-0143",
+        "phone": "+923107578999",
         "job_index": 3,
         "resume_score": 82,
         "resume_strengths": ["6 years DevOps at a unicorn startup", "CKS and AWS SA certified", "Built GitOps pipelines serving 200 microservices", "On-call SRE experience"],
@@ -287,7 +287,7 @@ DEMO_CANDIDATES = [
     {
         "name": "Lisa Park",
         "email": "lisa.park@frontend.dev",
-        "phone": "+1 (503) 555-0188",
+        "phone": "+923107578999",
         "job_index": 4,
         "resume_score": 79,
         "resume_strengths": ["4 years React/Next.js", "Pixel-perfect implementation from Figma", "Framer Motion animations expert", "Accessibility champion"],
@@ -301,7 +301,7 @@ DEMO_CANDIDATES = [
     {
         "name": "Ryan Foster",
         "email": "ryan.foster@gmail.com",
-        "phone": "+1 (720) 555-0195",
+        "phone": "+923107578999",
         "job_index": 4,
         "resume_score": 65,
         "resume_strengths": ["3 years React development", "Some Next.js experience", "Comfortable with TypeScript"],

@@ -124,7 +124,7 @@ def trigger_interview(request, pk):
     if not candidate.phone:
         return Response({"error": "Candidate has no phone number"}, status=status.HTTP_400_BAD_REQUEST)
 
-    if candidate.interview_status not in (Candidate.InterviewStatus.PENDING, Candidate.InterviewStatus.SCHEDULED):
+    if candidate.interview_status not in (Candidate.InterviewStatus.PENDING, Candidate.InterviewStatus.SCHEDULED, Candidate.InterviewStatus.FAILED):
         return Response({"error": "Interview already in progress or completed"}, status=status.HTTP_400_BAD_REQUEST)
 
     key_skill = candidate.resume_strengths[0] if candidate.resume_strengths else "your primary technical skill"

@@ -81,7 +81,10 @@ def handle_conversation_turn(
     response_text = text_block.text.strip() if text_block else ""
 
     if not response_text:
-        response_text = "Is there anything else you'd like to share before we wrap up?"
+        if should_end_call:
+            response_text = "Thank you so much for your time today. We'll review everything and get back to you soon. Have a great day!"
+        else:
+            response_text = "Is there anything else you'd like to share before we wrap up?"
 
     return {
         "text": response_text,

@@ -152,6 +152,27 @@ export default function CandidateDetailPage() {
       .finally(() => setLoading(false));
   }, [params.id]);
 
+  // Poll for updates while interview is in progress
+  useEffect(() => {
+    if (!candidate || !params.id) return;
+    const isLive = candidate.interview_status === "in_progress";
+    if (!isLive) return;
+
+    const interval = setInterval(() => {
+      getCandidate(params.id as string)
+        .then((updated) => {
+          setCandidate(updated);
+          // Stop polling when interview completes
+          if (updated.interview_status !== "in_progress") {
+            clearInterval(interval);
+          }
+        })
+        .catch(() => {});
+    }, 5000); // poll every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [candidate?.interview_status, params.id]);
+
   async function handleTriggerInterview() {
     if (!candidate) return;
     setInterviewLoading(true);
@@ -205,7 +226,7 @@ export default function CandidateDetailPage() {
   const canInterview =
     candidate.resume_score !== null &&
     candidate.resume_score > 60 &&
-    candidate.interview_status === "pending";
+    (candidate.interview_status === "pending" || candidate.interview_status === "failed" || candidate.interview_status === "scheduled");
 
   const status = statusConfig[candidate.final_status] || statusConfig.new;
 
@@ -404,6 +425,7 @@ export default function CandidateDetailPage() {
       <InterviewTranscript
         transcript={candidate.interview_transcript}
         analysis={candidate.interview_analysis}
+        interviewStatus={candidate.interview_status}
       />
 
       {/* ── Timeline footer ── */}

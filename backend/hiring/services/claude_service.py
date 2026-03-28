@@ -90,6 +90,6 @@ def analyze_transcript(transcript: str, job_description: str = "") -> dict:
 def get_interview_system_prompt(candidate_name: str, key_skill: str = "your primary technical skill") -> str:
     """Get the system prompt for the Vapi voice interview assistant."""
     prompt = _load_prompt('interview_system.txt')
+    prompt = prompt.replace('{candidate_name}', candidate_name)
     prompt = prompt.replace('{key_skill}', key_skill)
-    prompt += f"\n\nCandidate name: {candidate_name}"
     return prompt

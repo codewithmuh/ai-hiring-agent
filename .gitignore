@@ -15,3 +15,9 @@ node_modules/
 
 # OS
 .DS_Store
+
+# Claude Code
+.claude/
+
+# Media uploads
+backend/media/
