@@ -78,44 +78,92 @@ function parseTranscript(raw: string) {
 }
 
 export default function InterviewTranscript({ transcript, analysis, interviewStatus }: InterviewTranscriptProps) {
-  // Show live call indicator
+  // Show live call with real-time transcript
   if (interviewStatus === "in_progress") {
+    const liveMessages = transcript
+      ? transcript.split("\n\n").filter(Boolean).map((line, i) => {
+          const colonIdx = line.indexOf(": ");
+          const speaker = colonIdx > -1 ? line.slice(0, colonIdx) : "Unknown";
+          const text = colonIdx > -1 ? line.slice(colonIdx + 2) : line;
+          const isAI = speaker === "AI";
+          return { id: i, speaker, text, isAI };
+        })
+      : [];
+
     return (
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="rounded-2xl border-2 border-violet-200 bg-gradient-to-br from-violet-50 to-white p-12 shadow-sm"
+        className="rounded-2xl border-2 border-violet-200 bg-gradient-to-br from-violet-50 to-white shadow-sm overflow-hidden"
       >
-        <div className="flex flex-col items-center text-center">
-          <div className="relative mb-5">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-100">
-              <Mic className="h-8 w-8 text-violet-600" />
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-violet-100 bg-violet-50/50">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100">
+                <Mic className="h-5 w-5 text-violet-600" />
+              </div>
+              <motion.div
+                className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-white"
+                animate={{ scale: [1, 1.3, 1], opacity: [1, 0.7, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              />
             </div>
-            <motion.div
-              className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-emerald-500 border-2 border-white"
-              animate={{ scale: [1, 1.3, 1], opacity: [1, 0.7, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            />
+            <div>
+              <h2 className="text-sm font-semibold text-violet-900">Interview In Progress</h2>
+              <p className="text-xs text-muted-foreground">Live conversation</p>
+            </div>
           </div>
-          <h2 className="text-lg font-semibold text-violet-900">Interview In Progress</h2>
-          <p className="text-muted-foreground text-sm mt-1 max-w-sm">
-            The AI interviewer is speaking with the candidate right now. Results will appear here automatically when the call ends.
-          </p>
           <motion.div
-            className="mt-6 flex items-center gap-1.5"
+            className="flex items-center gap-1"
             animate={{ opacity: [0.4, 1, 0.4] }}
             transition={{ duration: 2, repeat: Infinity }}
           >
             {[0, 1, 2].map((i) => (
               <motion.div
                 key={i}
-                className="h-2 w-2 rounded-full bg-violet-400"
-                animate={{ scale: [1, 1.5, 1] }}
-                transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+                className="h-1.5 w-1.5 rounded-full bg-emerald-500"
+                animate={{ scale: [1, 1.4, 1] }}
+                transition={{ duration: 1, repeat: Infinity, delay: i * 0.15 }}
               />
             ))}
           </motion.div>
+        </div>
+
+        {/* Live chat */}
+        <div className="p-6 max-h-96 overflow-y-auto space-y-4">
+          {liveMessages.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-sm text-muted-foreground">Waiting for conversation to start...</p>
+              <motion.div className="mt-3 flex items-center justify-center gap-1.5" animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 2, repeat: Infinity }}>
+                {[0, 1, 2].map((i) => (
+                  <motion.div key={i} className="h-2 w-2 rounded-full bg-violet-300" animate={{ scale: [1, 1.5, 1] }} transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }} />
+                ))}
+              </motion.div>
+            </div>
+          ) : (
+            liveMessages.map((msg) => (
+              <motion.div
+                key={msg.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className={`flex ${msg.isAI ? "justify-start" : "justify-end"}`}
+              >
+                <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${
+                  msg.isAI
+                    ? "bg-white border border-gray-200 text-foreground rounded-bl-sm"
+                    : "bg-violet-600 text-white rounded-br-sm"
+                }`}>
+                  <p className={`text-[10px] font-semibold mb-1 ${msg.isAI ? "text-violet-600" : "text-violet-200"}`}>
+                    {msg.isAI ? "AI Interviewer" : msg.speaker}
+                  </p>
+                  {msg.text}
+                </div>
+              </motion.div>
+            ))
+          )}
         </div>
       </motion.div>
     );

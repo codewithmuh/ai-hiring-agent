@@ -146,6 +146,9 @@ export default function CandidateDetailPage() {
 
   useEffect(() => {
     if (!params.id) return;
+    setLoading(true);
+    setError(null);
+    setCandidate(null);
     getCandidate(params.id as string)
       .then(setCandidate)
       .catch(() => setError("Failed to load candidate"))
@@ -168,7 +171,7 @@ export default function CandidateDetailPage() {
           }
         })
         .catch(() => {});
-    }, 5000); // poll every 5 seconds
+    }, 3000); // poll every 3 seconds for live updates
 
     return () => clearInterval(interval);
   }, [candidate?.interview_status, params.id]);
@@ -180,8 +183,10 @@ export default function CandidateDetailPage() {
       await triggerInterview(candidate.id);
       const updated = await getCandidate(candidate.id);
       setCandidate(updated);
-    } catch {
-      setError("Failed to trigger interview");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to trigger interview. Try again.");
+      // Auto-dismiss error after 5 seconds
+      setTimeout(() => setError(null), 5000);
     } finally {
       setInterviewLoading(false);
     }

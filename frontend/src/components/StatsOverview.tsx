@@ -69,7 +69,7 @@ export default function StatsOverview() {
               {loading ? (
                 <div className="h-9 w-20 animate-pulse rounded-lg bg-gray-100" />
               ) : (
-                <p className="text-3xl font-extrabold tracking-tight">
+                <p className="text-4xl font-extrabold tracking-tight">
                   <AnimatedNumber target={value} />
                 </p>
               )}

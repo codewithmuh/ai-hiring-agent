@@ -157,49 +157,101 @@ def trigger_interview(request, pk):
 # ──────────────────────────────────────────
 @api_view(['POST'])
 def vapi_webhook(request):
-    """Handle Vapi webhook — receives interview transcript after call ends."""
+    """Handle Vapi webhook — receives live transcript updates and end-of-call reports."""
     data = request.data
-    message_type = data.get('message', {}).get('type', '') if isinstance(data.get('message'), dict) else data.get('type', '')
-
-    if message_type != 'end-of-call-report':
-        return Response({"status": "ignored"})
-
     message = data.get('message', data)
-    call_id = message.get('call', {}).get('id') or message.get('callId', '')
-    transcript = message.get('transcript', '') or message.get('artifact', {}).get('transcript', '')
+    message_type = message.get('type', '') if isinstance(message, dict) else ''
 
-    if not call_id:
-        return Response({"error": "No call ID"}, status=status.HTTP_400_BAD_REQUEST)
+    logger.info("Vapi webhook: type=%s", message_type)
 
-    try:
-        candidate = Candidate.objects.get(vapi_call_id=call_id)
-    except Candidate.DoesNotExist:
-        logger.warning("Webhook received for unknown call_id: %s", call_id)
-        return Response({"error": "Candidate not found for this call"}, status=status.HTTP_404_NOT_FOUND)
+    # ── Live transcript updates during the call ──
+    if message_type == 'transcript':
+        call_id = message.get('call', {}).get('id') or data.get('call', {}).get('id', '')
+        role = message.get('role', '')
+        text = message.get('transcript', '')
+        is_final = message.get('transcriptType', '') == 'final'
 
-    candidate.interview_transcript = transcript
-    candidate.interview_status = Candidate.InterviewStatus.COMPLETED
+        if call_id and text and is_final:
+            try:
+                candidate = Candidate.objects.get(vapi_call_id=call_id)
+                speaker = "AI" if role == "bot" else candidate.name
+                line = f"{speaker}: {text}"
+                # Append to existing transcript
+                if candidate.interview_transcript:
+                    candidate.interview_transcript += f"\n\n{line}"
+                else:
+                    candidate.interview_transcript = line
+                candidate.save(update_fields=['interview_transcript'])
+                logger.info("Live transcript updated for %s: %s", candidate.name, text[:50])
+            except Candidate.DoesNotExist:
+                pass
+        return Response({"status": "ok"})
 
-    if transcript:
+    # ── Conversation update (full transcript so far) ──
+    if message_type == 'conversation-update':
+        call_id = message.get('call', {}).get('id') or data.get('call', {}).get('id', '')
+        conversation = message.get('conversation', [])
+
+        if call_id and conversation:
+            try:
+                candidate = Candidate.objects.get(vapi_call_id=call_id)
+                lines = []
+                for msg in conversation:
+                    role = msg.get('role', '')
+                    content = msg.get('content', '')
+                    if content:
+                        speaker = "AI" if role == "bot" or role == "assistant" else candidate.name
+                        lines.append(f"{speaker}: {content}")
+                if lines:
+                    candidate.interview_transcript = "\n\n".join(lines)
+                    candidate.save(update_fields=['interview_transcript'])
+                    logger.info("Conversation updated for %s (%d messages)", candidate.name, len(lines))
+            except Candidate.DoesNotExist:
+                pass
+        return Response({"status": "ok"})
+
+    # ── End of call report — final transcript + analysis ──
+    if message_type == 'end-of-call-report':
+        call_id = message.get('call', {}).get('id') or message.get('callId', '')
+        transcript = message.get('transcript', '') or message.get('artifact', {}).get('transcript', '')
+
+        if not call_id:
+            return Response({"error": "No call ID"}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
-            analysis = claude_service.analyze_transcript(transcript, candidate.job_description or "")
-            candidate.interview_score = analysis.get('score', 0)
-            candidate.interview_analysis = analysis
+            candidate = Candidate.objects.get(vapi_call_id=call_id)
+        except Candidate.DoesNotExist:
+            logger.warning("Webhook received for unknown call_id: %s", call_id)
+            return Response({"error": "Candidate not found for this call"}, status=status.HTTP_404_NOT_FOUND)
 
-            if candidate.resume_score is not None:
-                candidate.overall_score = int(candidate.resume_score * 0.6 + candidate.interview_score * 0.4)
+        # Use final transcript if available, keep live one if not
+        if transcript:
+            candidate.interview_transcript = transcript
+        candidate.interview_status = Candidate.InterviewStatus.COMPLETED
 
-            if candidate.overall_score and candidate.overall_score >= 75:
-                candidate.final_status = Candidate.FinalStatus.SHORTLISTED
-            elif candidate.overall_score and candidate.overall_score < 50:
-                candidate.final_status = Candidate.FinalStatus.REJECTED
-            else:
-                candidate.final_status = Candidate.FinalStatus.INTERVIEWING
-        except Exception as e:
-            logger.error("Transcript analysis failed for candidate %s: %s", candidate.id, e)
+        if candidate.interview_transcript:
+            try:
+                analysis = claude_service.analyze_transcript(candidate.interview_transcript, candidate.job_description or "")
+                candidate.interview_score = analysis.get('score', 0)
+                candidate.interview_analysis = analysis
 
-    candidate.save()
-    return Response({"status": "processed"})
+                if candidate.resume_score is not None:
+                    candidate.overall_score = int(candidate.resume_score * 0.6 + candidate.interview_score * 0.4)
+
+                if candidate.overall_score and candidate.overall_score >= 75:
+                    candidate.final_status = Candidate.FinalStatus.SHORTLISTED
+                elif candidate.overall_score and candidate.overall_score < 50:
+                    candidate.final_status = Candidate.FinalStatus.REJECTED
+                else:
+                    candidate.final_status = Candidate.FinalStatus.INTERVIEWING
+            except Exception as e:
+                logger.error("Transcript analysis failed for candidate %s: %s", candidate.id, e)
+
+        candidate.save()
+        logger.info("Call ended for %s, status=%s", candidate.name, candidate.final_status)
+        return Response({"status": "processed"})
+
+    return Response({"status": "ignored"})
 
 
 # ──────────────────────────────────────────
